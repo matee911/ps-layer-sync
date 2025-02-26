@@ -45,21 +45,28 @@ function promptForLayerGroup(layerGroups) {
         alert("Invalid selection or layer group does not exist.");
         return null;
     }
-    var replaceExisting = confirm("Do you want to replace the existing '" + groupName + "' group in target documents?\n\nIf you choose 'Yes', the existing group will be removed and replaced.\nIf you choose 'No', the group will be copied alongside any existing groups in the target documents.");
+    var replaceExisting = confirm("Do you want to replace the existing '" + groupName + "' group in target documents?\n\nIf you choose 'Yes', all existing groups with this name will be removed and replaced.\nIf you choose 'No', the group will be copied alongside any existing groups in the target documents.");
     return { groupName: groupName, replaceExisting: replaceExisting };
 }
 
 /**
- * Removes the specified layer group if it exists in the target document.
- * @param {Document} targetDoc - The document where the group should be removed.
+ * Removes all instances of the specified layer group in the target document.
+ * @param {Document} targetDoc - The document where the groups should be removed.
  * @param {string} groupName - The name of the group to remove.
  */
 function removeExistingGroup(targetDoc, groupName) {
     try {
-        var existingGroup = targetDoc.layerSets.getByName(groupName);
-        existingGroup.remove();
+        var groupsToRemove = [];
+        for (var i = targetDoc.layerSets.length - 1; i >= 0; i--) {
+            if (targetDoc.layerSets[i].name === groupName) {
+                groupsToRemove.push(targetDoc.layerSets[i]);
+            }
+        }
+        for (var j = 0; j < groupsToRemove.length; j++) {
+            groupsToRemove[j].remove();
+        }
     } catch (e) {
-        // Do nothing if the group doesn't exist
+        // Do nothing if no matching groups exist
     }
 }
 
@@ -67,7 +74,7 @@ function removeExistingGroup(targetDoc, groupName) {
  * Duplicates or replaces the specified layer group in all other open documents.
  * @param {string} groupName - The name of the layer group to duplicate.
  * @param {Document} originalDoc - The document containing the layer group.
- * @param {boolean} replaceExisting - Whether to replace an existing group in target documents.
+ * @param {boolean} replaceExisting - Whether to replace existing groups in target documents.
  */
 function copyLayerGroupToDocuments(groupName, originalDoc, replaceExisting) {
     try {
