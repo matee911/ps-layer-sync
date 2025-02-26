@@ -15,9 +15,10 @@ Optionally, it can **replace existing groups** with the same name in the target 
 
 ### Run the Script
 
-1. Open multiple Photoshop documents and make sure the document containing the layer group you want to copy (i.e. Color Grading) is the active tab.
+1. Download the script from [here](https://github.com/matee911/ps-layer-sync/archive/refs/tags/v1.0-rc1.zip) and extract the `PSLayersSync.jsx` file from the ZIP archive.
+1. Open **multiple Photoshop documents** and make sure the document containing the layer group you want to copy (i.e. Color Grading) is the active tab.
 2. Go to **File → Scripts → Browse**. 
-3. Select the saved .jsx script file.
+3. Select the saved `PSLayersSync.jsx` script file.
 4. Enter the name of the layer group you want to copy.
 5. Choose whether to replace existing groups.
 6. The layer group will be copied to all open documents!
