@@ -79,8 +79,6 @@ function removeExistingGroup(targetDoc, groupName) {
 function copyLayerGroupToDocuments(groupName, originalDoc, replaceExisting) {
     try {
         var colorGradingGroup = originalDoc.layerSets.getByName(groupName);
-        var confirmPaste = confirm("Paste '" + groupName + "' into all open documents?");
-        if (!confirmPaste) return;
 
         for (var i = 0; i < app.documents.length; i++) {
             var targetDoc = app.documents[i];
