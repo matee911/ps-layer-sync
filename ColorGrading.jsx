@@ -1,6 +1,6 @@
-// Photoshop ExtendScript (JavaScript) - Copy a single layer group to other open documents
+// Photoshop ExtendScript (JavaScript) - Copy and optionally replace a single layer group in other open documents
 // This script copies a specific layer group from the active document
-// and pastes it into selected open Photoshop documents.
+// and pastes it into selected open Photoshop documents, with an option to replace existing groups.
 
 /**
  * Retrieves the names of all layer groups in the given document.
@@ -31,9 +31,9 @@ function arrayIncludes(arr, value) {
 }
 
 /**
- * Prompts the user to select a layer group to copy.
+ * Prompts the user to select a layer group and choose whether to replace existing groups.
  * @param {Array} layerGroups - An array of available layer group names.
- * @returns {string|null} - The selected group name, or null if canceled.
+ * @returns {Object|null} - An object containing the selected group name and replace option, or null if canceled.
  */
 function promptForLayerGroup(layerGroups) {
     if (layerGroups.length === 0) {
@@ -45,15 +45,31 @@ function promptForLayerGroup(layerGroups) {
         alert("Invalid selection or layer group does not exist.");
         return null;
     }
-    return groupName;
+    var replaceExisting = confirm("Do you want to replace the existing '" + groupName + "' group in target documents?\n\nIf you choose 'Yes', the existing group will be removed and replaced.\nIf you choose 'No', the group will be copied alongside any existing groups in the target documents.");
+    return { groupName: groupName, replaceExisting: replaceExisting };
 }
 
 /**
- * Duplicates the specified layer group in all other open documents.
+ * Removes the specified layer group if it exists in the target document.
+ * @param {Document} targetDoc - The document where the group should be removed.
+ * @param {string} groupName - The name of the group to remove.
+ */
+function removeExistingGroup(targetDoc, groupName) {
+    try {
+        var existingGroup = targetDoc.layerSets.getByName(groupName);
+        existingGroup.remove();
+    } catch (e) {
+        // Do nothing if the group doesn't exist
+    }
+}
+
+/**
+ * Duplicates or replaces the specified layer group in all other open documents.
  * @param {string} groupName - The name of the layer group to duplicate.
  * @param {Document} originalDoc - The document containing the layer group.
+ * @param {boolean} replaceExisting - Whether to replace an existing group in target documents.
  */
-function copyLayerGroupToDocuments(groupName, originalDoc) {
+function copyLayerGroupToDocuments(groupName, originalDoc, replaceExisting) {
     try {
         var colorGradingGroup = originalDoc.layerSets.getByName(groupName);
         var confirmPaste = confirm("Paste '" + groupName + "' into all open documents?");
@@ -62,10 +78,18 @@ function copyLayerGroupToDocuments(groupName, originalDoc) {
         for (var i = 0; i < app.documents.length; i++) {
             var targetDoc = app.documents[i];
             if (targetDoc !== originalDoc) {
+                app.activeDocument = targetDoc; // Switch to the target document
+
+                if (replaceExisting) {
+                    removeExistingGroup(targetDoc, groupName);
+                }
+
+                app.activeDocument = originalDoc; // Switch back to original document
                 colorGradingGroup.duplicate(targetDoc); // Duplicate directly into the target document
             }
         }
 
+        app.activeDocument = originalDoc; // Ensure we return to the original document
         alert("Layer group '" + groupName + "' copied to all open documents.");
     } catch (e) {
         alert("Error: " + e.message);
@@ -78,9 +102,9 @@ function copyLayerGroupToDocuments(groupName, originalDoc) {
 function copyAndPasteLayerGroup() {
     var originalDoc = app.activeDocument;
     var layerGroups = getLayerGroups(originalDoc);
-    var groupName = promptForLayerGroup(layerGroups);
-    if (groupName) {
-        copyLayerGroupToDocuments(groupName, originalDoc);
+    var selection = promptForLayerGroup(layerGroups);
+    if (selection) {
+        copyLayerGroupToDocuments(selection.groupName, originalDoc, selection.replaceExisting);
     }
 }
 
